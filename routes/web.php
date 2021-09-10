@@ -18,4 +18,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::any('pa', [PaController::class, 'index']);
+Route::any('madeinchina', [PaController::class, 'index']);
+Route::any('alibaba', [PaController::class, 'alibaba']);
