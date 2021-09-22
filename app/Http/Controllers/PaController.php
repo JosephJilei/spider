@@ -82,14 +82,14 @@ class PaController extends Controller
         set_time_limit(0);
         $name = '产品目录手册';
         // $url = $request->input('url');
-        $group = $request->input('group', 'Stamping parts');
+        $group = $request->input('group');
         $item = $request->input('item');
 
         // if(!$url || !$item){
         //     dd('没有参数');
         // }
 
-        if(!$item){
+        if(!$group || !$item){
             dd('没有参数');
         }
 
@@ -100,7 +100,7 @@ class PaController extends Controller
         $html = new simple_html_dom();
         //@$html->load($parseHtml);
         //@$html->load_file($url);
-        @$html->load_file(storage_path().'/app/public/html/Stamping parts/48-'.$item.'.html');
+        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $hrefList = $html->find('div.organic-gallery-offer-section__title a');
         $priceList = $html->find('span.elements-offer-price-normal__price');
         //分析html
@@ -114,6 +114,7 @@ class PaController extends Controller
             array_push($data, [$group, $no, $href]);
             $hrefArr[$no] = $href;
             $priceArr[$no] = str_replace('$', '', $priceList[$key]->innertext);
+            $priceArr[$no] = str_replace(',', '', $priceArr[$no]);
         }
         //下载图片
         foreach($hrefArr as $key => $href){
@@ -123,6 +124,7 @@ class PaController extends Controller
             $titleList = $html->find('h1.module-pdp-title');
             if(isset($titleList[0])) $title =  $titleList[0]->attr['title'];
             else $title =  '';
+
             array_splice($data[$key-($item-1)*$limit], 2, 0, $title);
             //price
             $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$priceArr[$key].'/';
