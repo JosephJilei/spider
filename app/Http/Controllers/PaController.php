@@ -102,32 +102,78 @@ class PaController extends Controller
         //@$html->load_file($url);
         @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $hrefList = $html->find('div.organic-gallery-offer-section__title a');
-        $priceList = $html->find('span.elements-offer-price-normal__price');
+        //dd($hrefList);
         //分析html
         //编号 title url 生成excel
         $data = [['分组', '型号', '标题', '产品链接']];
         $hrefArr = [];
-        $priceArr = [];
         foreach($hrefList as $key=>$l){
             $no = $key + 1 + ($item-1)*$limit;
             $href = 'https:'.$l->attr['href'];
-            array_push($data, [$group, $no, $href]);
+            $title = $l->attr['title'];
+            array_push($data, [$group, $no, $title, $href]);
             $hrefArr[$no] = $href;
-            $priceArr[$no] = str_replace('$', '', $priceList[$key]->innertext);
-            $priceArr[$no] = str_replace(',', '', $priceArr[$no]);
         }
+
+        // @$html->load_file($hrefArr[480]);
+        // $priceFolder  = '';
+        // $priceList = $html->find('span.pre-inquiry-price');
+        // if($priceList){
+        //     $priceLength = count($priceList);
+        //     if($priceLength > 1) $priceFolder = $priceList[$priceLength-1]->innertext.'-'.$priceList[0]->innertext;
+        //     else $priceFolder = $priceList[0]->innertext;
+            
+        //     $priceFolder = str_replace('$', '', $priceFolder);
+        //     $priceFolder = str_replace(',', '', $priceFolder);
+        //     $priceFolder = str_replace(' ', '', $priceFolder);
+        // }else{
+        //     $spanList = $html->find('span.ma-ref-price > span');
+        //     if($spanList){
+        //         $priceFolder = $spanList[0]->innertext;
+        //         dd($priceFolder);
+        //     }else{
+        //         $spanList = $html->find('span.ma-reference-price-highlight');
+        //         $priceFolder = $spanList[0]->innertext;
+        //         dd($priceFolder);
+        //     }
+            
+        //     $priceFolder = str_replace('$', '', $priceFolder);
+        //     $priceFolder = str_replace(',', '', $priceFolder);
+        //     $priceFolder = str_replace(' ', '', $priceFolder);
+        // }
+
         //下载图片
         foreach($hrefArr as $key => $href){
             //$productHtml = $this->httpCurl($href);
             @$html->load_file($href);
-            //title
-            $titleList = $html->find('h1.module-pdp-title');
-            if(isset($titleList[0])) $title =  $titleList[0]->attr['title'];
-            else $title =  '';
-
-            array_splice($data[$key-($item-1)*$limit], 2, 0, $title);
             //price
-            $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$priceArr[$key].'/';
+            //ma-ref-price
+            //pre-inquiry-price
+            $priceFolder  = '';
+            $priceList = $html->find('span.pre-inquiry-price');
+            if($priceList){
+                $priceLength = count($priceList);
+                if($priceLength > 1) $priceFolder = $priceList[$priceLength-1]->innertext.'-'.$priceList[0]->innertext;
+                else $priceFolder = $priceList[0]->innertext;
+                
+                $priceFolder = str_replace('$', '', $priceFolder);
+                $priceFolder = str_replace(',', '', $priceFolder);
+                $priceFolder = str_replace(' ', '', $priceFolder);
+            }else{
+                $spanList = $html->find('span.ma-ref-price > span');
+                if($spanList){
+                    $priceFolder = $spanList[0]->innertext;
+                }else{
+                    $spanList = $html->find('span.ma-reference-price-highlight');
+                    $priceFolder = $spanList[0]->innertext;
+                }
+
+                $priceFolder = str_replace('$', '', $priceFolder);
+                $priceFolder = str_replace(',', '', $priceFolder);
+                $priceFolder = str_replace(' ', '', $priceFolder);
+            }
+            
+            $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$priceFolder.'/';
             Storage::disk('public')->makeDirectory($folderName);
             $imgList = $html->find('li.main-image-thumb-item > img');
             //img src
@@ -140,6 +186,7 @@ class PaController extends Controller
                 }
             }
         }
+
         //写入excel
         $this->export($data, $name, $group, $item);
     }
