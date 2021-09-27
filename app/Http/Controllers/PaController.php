@@ -114,8 +114,9 @@ class PaController extends Controller
             array_push($data, [$group, $no, $title, $href]);
             $hrefArr[$no] = $href;
         }
-
-        // @$html->load_file($hrefArr[480]);
+        
+        // dd($hrefArr[247]);
+        // @$html->load_file($hrefArr[247]);
         // $priceFolder  = '';
         // $priceList = $html->find('span.pre-inquiry-price');
         // if($priceList){
@@ -129,12 +130,14 @@ class PaController extends Controller
         // }else{
         //     $spanList = $html->find('span.ma-ref-price > span');
         //     if($spanList){
+        //         dd($spanList);
         //         $priceFolder = $spanList[0]->innertext;
-        //         dd($priceFolder);
+        //         dd('1'.$priceFolder);
         //     }else{
         //         $spanList = $html->find('span.ma-reference-price-highlight');
+        //         dd($spanList);
         //         $priceFolder = $spanList[0]->innertext;
-        //         dd($priceFolder);
+        //         dd('2'.$priceFolder);
         //     }
             
         //     $priceFolder = str_replace('$', '', $priceFolder);
@@ -165,7 +168,11 @@ class PaController extends Controller
                     $priceFolder = $spanList[0]->innertext;
                 }else{
                     $spanList = $html->find('span.ma-reference-price-highlight');
-                    $priceFolder = $spanList[0]->innertext;
+                    if($spanList){
+                        $priceFolder = $spanList[0]->innertext;
+                    }else{
+                        continue;
+                    }
                 }
 
                 $priceFolder = str_replace('$', '', $priceFolder);
