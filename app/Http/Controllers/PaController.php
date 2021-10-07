@@ -75,6 +75,79 @@ class PaController extends Controller
         }
     }
 
+    public function plastic(Request $request)
+    {
+        $limit = 48;
+        set_time_limit(0);
+        $name = '产品目录手册';
+        //$url = $request->input('url');
+        $group = $request->input('group');
+        $item = $request->input('item');
+
+        if(!$item || $group){
+            dd('没有参数');
+        }
+
+        $noArr = [
+                    'Electrical Plastic Parts'=>'electricalplastic',
+                    '',
+                    '',
+                    ''
+                ];
+
+        //抓取html
+        //$url = 'https://szytjd.en.made-in-china.com/productList?username=&pageNumber=2&pageSize=48&viewType=1&isByGroup=1&pageUrlFrom=1&productGroupOrCatId=YqkmyMEPJRUe&searchKeyword=&searchKeywordSide=&searchKeywordList=&selectedFeaturedType=&selectedSpotlightId=&viewPageSize=48';
+        //$parseHtml = $this->httpCurl($url);
+        //dd($parseHtml);
+        $html = new simple_html_dom();
+        //@$html->load_file($url);
+        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        $list = $html->find('div.prod-title a');
+        //dd($list);
+        //分析html
+        //编号 title url 生成excel
+        $data = [['分组', '型号', '标题', '产品链接']];
+        $hrefArr = [];
+        foreach($list as $key=>$l){
+            $no = $key + 1 + ($item-1)*$limit;
+            $title = $l->attr['title'];
+            $href = $l->attr['href'];
+            $noStr = 'oem-cm-'.$noArr[$group].renameFolder($no);
+            array_push($data, [$group, $no, $title, $href]);
+            $hrefArr[$no] = $href;
+        }
+
+        //写入excel
+        $this->export($data, $name, $group, $item);
+        //下载图片 001-1-5
+        foreach($hrefArr as $key => $href){
+            //$productHtml = $this->httpCurl($href);
+            @$html->load_file($href);
+            // $priceList = $html->find('strong.red');
+            // if(count($priceList) > 1){
+            //     $folderName = str_replace('US $', '', $priceList[count($priceList)-1]->innertext).'-'.str_replace('US $', '', $priceList[0]->innertext);
+            //     $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$folderName.'/';
+            // }else{
+            //     $folderName = str_replace('US $', '', $priceList[0]->innertext);
+            //     $folderName = str_replace('/ Piece', '', $folderName);
+            //     $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$folderName.'/';
+            // }
+
+            $folderName = $group.'/img/'.$this->renameFolder($key);
+            Storage::disk('public')->makeDirectory($folderName);
+
+            $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
+            //video src
+            //img fsrc
+            foreach($imgList as $key=>$img){
+                if(isset($img->attr['fsrc'])){
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
+                }
+            }
+        }
+    }
+
     //ALIBB viewtype=G
     public function alibaba(Request $request)
     {
