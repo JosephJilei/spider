@@ -151,115 +151,53 @@ class PaController extends Controller
     //ALIBB viewtype=G
     public function alibaba(Request $request)
     {
+        //每页产品数量
         $limit = 48;
         set_time_limit(0);
         $name = '产品目录手册';
-        // $url = $request->input('url');
+
         $group = $request->input('group');
         $item = $request->input('item');
-
-        // if(!$url || !$item){
-        //     dd('没有参数');
-        // }
-
         if(!$group || !$item){
             dd('没有参数');
         }
 
-        //抓取html
-        //$parseHtml = QueryList::get($url)->getHtml();
-        // $parseHtml = QueryList::get($url)->find('a.elements-title-normal')->attrs('href');
-        // dd($parseHtml->all());
+        $prefix = ['Casting'=>'cast'];
+        $titleSuffix = ['Casting'=>'CNC Turning Stamping Casting Parts'];
+
         $html = new simple_html_dom();
-        //@$html->load($parseHtml);
-        //@$html->load_file($url);
         @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $hrefList = $html->find('div.organic-gallery-offer-section__title a');
-        //dd($hrefList);
         //分析html
-        //编号 title url 生成excel
         $data = [['分组', '型号', '标题', '产品链接']];
         $hrefArr = [];
         foreach($hrefList as $key=>$l){
             $no = $key + 1 + ($item-1)*$limit;
+            $noStr = 'oem-cm-'.$prefix[$group].$this->renameFolder($no);
             $href = 'https:'.$l->attr['href'];
             $title = $l->attr['title'];
-            array_push($data, [$group, $no, $title, $href]);
+            //是否有关键词
+            $title = preg_replace('/(C|c)ast(ings|ing)?\s/', '', $title);
+            $title = preg_replace('/(T|t)urn(ings|ing)?\s/', '', $title);
+            $title = preg_replace('/(S|s)tamp(ings|ing)?\s/', '', $title);
+            $title = preg_replace('/(P|p)art(s)?\s/', '', $title);
+            $title = preg_replace('/(CNC|cnc)\s/', '', $title);
+            $title = trim($title);
+            $titleStr = $title.' '.$titleSuffix[$group];
+            array_push($data, [$group, $noStr, $titleStr, $href]);
             $hrefArr[$no] = $href;
         }
-        
-        // dd($hrefArr[247]);
-        // @$html->load_file($hrefArr[247]);
-        // $priceFolder  = '';
-        // $priceList = $html->find('span.pre-inquiry-price');
-        // if($priceList){
-        //     $priceLength = count($priceList);
-        //     if($priceLength > 1) $priceFolder = $priceList[$priceLength-1]->innertext.'-'.$priceList[0]->innertext;
-        //     else $priceFolder = $priceList[0]->innertext;
-            
-        //     $priceFolder = str_replace('$', '', $priceFolder);
-        //     $priceFolder = str_replace(',', '', $priceFolder);
-        //     $priceFolder = str_replace(' ', '', $priceFolder);
-        // }else{
-        //     $spanList = $html->find('span.ma-ref-price > span');
-        //     if($spanList){
-        //         dd($spanList);
-        //         $priceFolder = $spanList[0]->innertext;
-        //         dd('1'.$priceFolder);
-        //     }else{
-        //         $spanList = $html->find('span.ma-reference-price-highlight');
-        //         dd($spanList);
-        //         $priceFolder = $spanList[0]->innertext;
-        //         dd('2'.$priceFolder);
-        //     }
-            
-        //     $priceFolder = str_replace('$', '', $priceFolder);
-        //     $priceFolder = str_replace(',', '', $priceFolder);
-        //     $priceFolder = str_replace(' ', '', $priceFolder);
-        // }
 
         //下载图片
         foreach($hrefArr as $key => $href){
-            //$productHtml = $this->httpCurl($href);
             @$html->load_file($href);
-            //price
-            //ma-ref-price
-            //pre-inquiry-price
-            $priceFolder  = '';
-            $priceList = $html->find('span.pre-inquiry-price');
-            if($priceList){
-                $priceLength = count($priceList);
-                if($priceLength > 1) $priceFolder = $priceList[$priceLength-1]->innertext.'-'.$priceList[0]->innertext;
-                else $priceFolder = $priceList[0]->innertext;
-                
-                $priceFolder = str_replace('$', '', $priceFolder);
-                $priceFolder = str_replace(',', '', $priceFolder);
-                $priceFolder = str_replace(' ', '', $priceFolder);
-            }else{
-                $spanList = $html->find('span.ma-ref-price > span');
-                if($spanList){
-                    $priceFolder = $spanList[0]->innertext;
-                }else{
-                    $spanList = $html->find('span.ma-reference-price-highlight');
-                    if($spanList){
-                        $priceFolder = $spanList[0]->innertext;
-                    }else{
-                        continue;
-                    }
-                }
-
-                $priceFolder = str_replace('$', '', $priceFolder);
-                $priceFolder = str_replace(',', '', $priceFolder);
-                $priceFolder = str_replace(' ', '', $priceFolder);
-            }
-            
-            $folderName = $group.'/img/'.$this->renameFolder($key).'-'.$priceFolder.'/';
+            $folderName = $group.'/img/'.$this->renameFolder($key).'/';
             Storage::disk('public')->makeDirectory($folderName);
             $imgList = $html->find('li.main-image-thumb-item > img');
             //img src
-            foreach($imgList as $img){
+            foreach($imgList as $key=>$img){
                 if(isset($img->attr['src'])){
-                    $filename = md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
                     $sourceArr  = explode('_', $img->attr['src']);
                     array_pop($sourceArr);
                     Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
