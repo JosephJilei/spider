@@ -20,7 +20,7 @@ class PaController extends Controller
         $group = $request->input('group');
         $item = $request->input('item');
 
-        if(!$item || $group){
+        if(!$item || !$group){
             dd('没有参数');
         }
 
@@ -30,7 +30,7 @@ class PaController extends Controller
         ];
 
         $titleSuffix = [
-                'Metal Parts'=>'CNC Turning Stamping Casting Parts',
+                'Metal Parts'=>'CNC Turning Stamping Casting Metal Parts',
                 'Stamping Parts'=>'Casting CNC Turning Stamping Parts',
             ];
 
@@ -53,12 +53,17 @@ class PaController extends Controller
             $title = preg_replace('/(S|s)tamp(ings|ing)?\s?/', '', $title);
             $title = preg_replace('/(P|p)art(s)?\s?/', '', $title);
             $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
+            $title = preg_replace('/(M|m)etal\s?/', '', $title);
+            $title = preg_replace('/(A|a)libaba\s?/', '', $title);
+            $title = preg_replace('/(,|for|-|\/|.|;)\s?/', '', $title);
+            
             $title = trim($title);
+            $title = ucwords($title);
 
             //去掉重复词
             $titelArr = explode(' ', $title);
             $titleArrNew = array_unique($titelArr);
-            $title = implode(' ',$titleArrNew);
+            $title = implode(' ', $titleArrNew);
             $titleStr = $title.' '.$titleSuffix[$group];
 
             array_push($data, [$group, $noStr, $titleStr, $href]);
@@ -66,22 +71,22 @@ class PaController extends Controller
         }
 
         //下载图片
-        foreach($hrefArr as $key => $href){
-            //$productHtml = $this->httpCurl($href);
-            @$html->load_file($href);
-            $folderName = $group.'/img/'.$this->renameFolder($key);
-            Storage::disk('public')->makeDirectory($folderName);
+        // foreach($hrefArr as $key => $href){
+        //     //$productHtml = $this->httpCurl($href);
+        //     @$html->load_file($href);
+        //     $folderName = $group.'/img/'.$this->renameFolder($key);
+        //     Storage::disk('public')->makeDirectory($folderName);
 
-            $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
-            //video src
-            //img fsrc
-            foreach($imgList as $img){
-                if(isset($img->attr['fsrc'])){
-                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
-                    Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
-                }
-            }
-        }
+        //     $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
+        //     //video src
+        //     //img fsrc
+        //     foreach($imgList as $img){
+        //         if(isset($img->attr['fsrc'])){
+        //             $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+        //             Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
+        //         }
+        //     }
+        // }
 
         //写入excel
         $this->export($data, $name, $group, $item);
@@ -213,10 +218,9 @@ class PaController extends Controller
             $title = preg_replace('/(S|s)tamp(ings|ing)?\s?/', '', $title);
             $title = preg_replace('/(P|p)art(s)?\s?/', '', $title);
             $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
-            $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
             $title = preg_replace('/(M|m)etal\s?/', '', $title);
-            $title = preg_replace('/,\s?/', '', $title);
-            $title = preg_replace('/for\s?/', '', $title);
+            $title = preg_replace('/(A|a)libaba\s?/', '', $title);
+            $title = preg_replace('/(,|for|-|\/|.|;)\s?/', '', $title);
             $title = trim($title);
             $title = ucwords($title);
 
