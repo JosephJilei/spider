@@ -55,7 +55,8 @@ class PaController extends Controller
             $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
             $title = preg_replace('/(M|m)etal\s?/', '', $title);
             $title = preg_replace('/(A|a)libaba\s?/', '', $title);
-            $title = preg_replace('/(,|for|-|\/|.|;)\s?/', '', $title);
+            $title = preg_replace('/for\s?/', '', $title);
+            $title = preg_replace('/(,|-|\/|.|;)/', '', $title);
             
             $title = trim($title);
             $title = ucwords($title);
@@ -220,7 +221,8 @@ class PaController extends Controller
             $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
             $title = preg_replace('/(M|m)etal\s?/', '', $title);
             $title = preg_replace('/(A|a)libaba\s?/', '', $title);
-            $title = preg_replace('/(,|for|-|\/|.|;)\s?/', '', $title);
+            $title = preg_replace('/for\s?/', '', $title);
+            $title = preg_replace('/(,|-|\/|.|;)/', '', $title);
             $title = trim($title);
             $title = ucwords($title);
 
