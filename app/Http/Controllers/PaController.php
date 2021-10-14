@@ -26,12 +26,18 @@ class PaController extends Controller
 
         $prefix = [
             'Metal Parts'=>'metal',
-            'Stamping Parts'=>'stamp'
+            'Electronic Plastic Parts'=>'electronicplastic',
+            'Medical Plastic Parts'=>'medicalplastic',
+            'Automobile Plastic Parts'=>'automobileplastic',
+            'Household Plastic Parts'=>'householdplastic',
         ];
 
         $titleSuffix = [
                 'Metal Parts'=>'CNC Turning Stamping Casting Metal Parts',
-                'Stamping Parts'=>'Casting CNC Turning Stamping Parts',
+                'Electronic Plastic Parts'=>'Electronic Plastic Parts',
+                'Medical Plastic Parts'=>'Medical Plastic Parts',
+                'Automobile Plastic Parts'=>'Automobile Plastic Parts',
+                'Household Plastic Parts'=>'Household Plastic Parts',
             ];
 
         $html = new simple_html_dom();
@@ -54,13 +60,19 @@ class PaController extends Controller
             $title = preg_replace('/(P|p)art(s)?\s?/', '', $title);
             $title = preg_replace('/(CNC|cnc)\s?/', '', $title);
             $title = preg_replace('/(M|m)etal\s?/', '', $title);
-            $title = preg_replace('/(A|a)libaba\s?/', '', $title);
-            $title = preg_replace('/for\s?/', '', $title);
-            $title = preg_replace('/(,|-|\/|.|;)/', '', $title);
+           
+            $title = preg_replace('/(E|e)lectronic\s?/', '', $title);
+            $title = preg_replace('/(E|e)lectrical\s?/', '', $title);
+            $title = preg_replace('/(M|m)edical\s?/', '', $title);
+            $title = preg_replace('/(A|a)utomobile\s?/', '', $title);
+            $title = preg_replace('/(A|a)utomoblie\s?/', '', $title);
+            $title = preg_replace('/(H|h)ousehold\s?/', '', $title);
+            $title = preg_replace('/(P|p)lastic\s?/', '', $title);
             
+            $title = preg_replace('/for\s?/', '', $title);
+            $title = preg_replace('/(,|-|\/|\.|;)/', '', $title);
             $title = trim($title);
             $title = ucwords($title);
-
             //去掉重复词
             $titelArr = explode(' ', $title);
             $titleArrNew = array_unique($titelArr);
@@ -75,13 +87,13 @@ class PaController extends Controller
         // foreach($hrefArr as $key => $href){
         //     //$productHtml = $this->httpCurl($href);
         //     @$html->load_file($href);
-        //     $folderName = $group.'/img/'.$this->renameFolder($key);
+        //     $folderName = $group.'/img/'.$this->renameFolder($key).'/';
         //     Storage::disk('public')->makeDirectory($folderName);
 
         //     $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
         //     //video src
         //     //img fsrc
-        //     foreach($imgList as $img){
+        //     foreach($imgList as $key=>$img){
         //         if(isset($img->attr['fsrc'])){
         //             $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
         //             Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
@@ -222,7 +234,7 @@ class PaController extends Controller
             $title = preg_replace('/(M|m)etal\s?/', '', $title);
             $title = preg_replace('/(A|a)libaba\s?/', '', $title);
             $title = preg_replace('/for\s?/', '', $title);
-            $title = preg_replace('/(,|-|\/|.|;)/', '', $title);
+            $title = preg_replace('/(,|-|\/|\.|;)/', '', $title);
             $title = trim($title);
             $title = ucwords($title);
 
