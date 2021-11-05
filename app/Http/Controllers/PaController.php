@@ -84,22 +84,22 @@ class PaController extends Controller
         }
 
         //下载图片
-        // foreach($hrefArr as $key => $href){
-        //     //$productHtml = $this->httpCurl($href);
-        //     @$html->load_file($href);
-        //     $folderName = $group.'/img/'.$this->renameFolder($key).'/';
-        //     Storage::disk('public')->makeDirectory($folderName);
+        foreach($hrefArr as $key => $href){
+            //$productHtml = $this->httpCurl($href);
+            @$html->load_file($href);
+            $folderName = $group.'/img/'.$this->renameFolder($key).'/';
+            Storage::disk('public')->makeDirectory($folderName);
 
-        //     $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
-        //     //video src
-        //     //img fsrc
-        //     foreach($imgList as $key=>$img){
-        //         if(isset($img->attr['fsrc'])){
-        //             $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
-        //             Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
-        //         }
-        //     }
-        // }
+            $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
+            //video src
+            //img fsrc
+            foreach($imgList as $key=>$img){
+                if(isset($img->attr['fsrc'])){
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
+                }
+            }
+        }
 
         //写入excel
         $this->export($data, $name, $group, $item);
@@ -121,12 +121,14 @@ class PaController extends Controller
 
         $prefix = [
                     'Casting Parts'=>'cast',
-                    'Stamping Parts'=>'stamp'
+                    'Stamping Parts'=>'stamp',
+                    'Electric Tools Parts'=>'electrictools',
                 ];
 
         $titleSuffix = [
                         'Casting Parts'=>'Metal CNC Turning Stamping Casting Parts',
                         'Stamping Parts'=>'Metal Casting CNC Turning Stamping Parts',
+                        'Electric Tools Parts'=>'Electric Tools Parts',
                     ];
 
         $html = new simple_html_dom();
@@ -172,18 +174,18 @@ class PaController extends Controller
             $titleStr = $title.' '.$titleSuffix[$group];
             array_splice($data[$key-($item-1)*$limit], 2, 0, [$titleStr]);
 
-            // $folderName = $group.'/img/'.$this->renameFolder($key).'/';
-            // Storage::disk('public')->makeDirectory($folderName);
-            // $imgList = $html->find('li.main-image-thumb-item > img');
-            // //img src
-            // foreach($imgList as $key=>$img){
-            //     if(isset($img->attr['src'])){
-            //         $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
-            //         $sourceArr  = explode('_', $img->attr['src']);
-            //         array_pop($sourceArr);
-            //         Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
-            //     }
-            // }
+            $folderName = $group.'/img/'.$this->renameFolder($key).'/';
+            Storage::disk('public')->makeDirectory($folderName);
+            $imgList = $html->find('li.main-image-thumb-item > img');
+            //img src
+            foreach($imgList as $key=>$img){
+                if(isset($img->attr['src'])){
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    $sourceArr  = explode('_', $img->attr['src']);
+                    array_pop($sourceArr);
+                    Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
+                }
+            }
         }
 
         //写入excel
