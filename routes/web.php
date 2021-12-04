@@ -20,3 +20,4 @@ Route::get('/', function () {
 
 Route::any('madeinchina', [PaController::class, 'index']);
 Route::any('alibaba', [PaController::class, 'alibaba']);
+Route::any('drill', [PaController::class, 'drill']);

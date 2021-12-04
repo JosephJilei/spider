@@ -192,6 +192,86 @@ class PaController extends Controller
         $this->export($data, $name, $group, $item);
     }
 
+    public function drill(Request $request)
+    {
+        //每页产品数量
+        $limit = 24;
+        set_time_limit(0);
+        $name = '产品目录手册';
+
+        $group = $request->input('group');
+        $item = $request->input('item');
+        if(!$group || !$item){
+            dd('没有参数');
+        }
+
+        $prefix = [
+                    'Electric Tools Drill Parts'=>'electrictoolsdrill',
+                ];
+
+        $titleSuffix = [
+                        'Electric Tools Drill Parts'=>'Electric Tools Drill Parts',
+                    ];
+
+        $html = new simple_html_dom();
+        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        $hrefList = $html->find('div.title.clamped a');
+        //分析html
+        $data = [['分组', '型号', '标题', '产品链接']];
+        $hrefArr = [];
+        foreach($hrefList as $key=>$l){
+            $no = $key + 1 + ($item-1)*$limit;
+            $noStr = 'oem-cm-'.$prefix[$group].$this->renameFolder($no);
+            $href = 'https://zlytools.en.alibaba.com/'.$l->attr['href'];
+            //$title = $l->attr['title'];
+            
+            array_push($data, [$group, $noStr, $href]);
+            $hrefArr[$no] = $href;
+        }
+
+        //下载图片
+        foreach($hrefArr as $key => $href){
+            @$html->load_file($href);
+            $titleList = $html->find('h1.module-pdp-title');
+            if($titleList) $title = $titleList[0]->attr['title'];
+            else $title = '';
+
+            //是否有关键词
+            $title = preg_replace('/(E|e)lectric\s?/', '', $title);
+            $title = preg_replace('/(T|t)ool(s)?\s?/', '', $title);
+            $title = preg_replace('/(D|d)rill(s)?\s?/', '', $title);
+            $title = preg_replace('/(P|p)art(s)?\s?/', '', $title);
+            $title = preg_replace('/(A|a)libaba\s?/', '', $title);
+            $title = preg_replace('/for\s?/', '', $title);
+            $title = preg_replace('/(,|-|\/|\.|;)/', '', $title);
+            $title = trim($title);
+            $title = ucwords($title);
+
+            //去掉重复词
+            $titelArr = explode(' ', $title);
+            $titleArrNew = array_unique($titelArr);
+            $title = implode(' ', $titleArrNew);
+            $titleStr = $title.' '.$titleSuffix[$group];
+            array_splice($data[$key-($item-1)*$limit], 2, 0, [$titleStr]);
+
+            $folderName = $group.'/img/'.$this->renameFolder($key).'/';
+            Storage::disk('public')->makeDirectory($folderName);
+            $imgList = $html->find('li.main-image-thumb-item > img');
+            //img src
+            foreach($imgList as $key=>$img){
+                if(isset($img->attr['src'])){
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    $sourceArr  = explode('_', $img->attr['src']);
+                    array_pop($sourceArr);
+                    Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
+                }
+            }
+        }
+
+        //写入excel
+        $this->export($data, $name, $group, $item);
+    }
+
     // private function httpCurl($url, $header=null)
     // {
     //     // 1.初始化
