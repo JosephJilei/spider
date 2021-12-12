@@ -192,6 +192,7 @@ class PaController extends Controller
         $this->export($data, $name, $group, $item);
     }
 
+    //drill&chain
     public function drill(Request $request)
     {
         //每页产品数量
@@ -207,10 +208,12 @@ class PaController extends Controller
 
         $prefix = [
                     'Electric Tools Drill Parts'=>'electrictoolsdrill',
+                    'Chain Parts'=>'metalchain',
                 ];
 
         $titleSuffix = [
                         'Electric Tools Drill Parts'=>'Electric Tools Drill Parts',
+                        'Chain Parts'=>'Metal Chain Parts',
                     ];
 
         $html = new simple_html_dom();
@@ -222,12 +225,15 @@ class PaController extends Controller
         foreach($hrefList as $key=>$l){
             $no = $key + 1 + ($item-1)*$limit;
             $noStr = 'oem-cm-'.$prefix[$group].$this->renameFolder($no);
-            $href = 'https://zlytools.en.alibaba.com/'.$l->attr['href'];
+
+            if($group == 'Electric Tools Drill Parts') $href = 'https://zlytools.en.alibaba.com'.$l->attr['href'];
+            if($group == 'Chain Parts') $href = 'https://qdconveyor.en.alibaba.com'.$l->attr['href'];
             //$title = $l->attr['title'];
             
             array_push($data, [$group, $noStr, $href]);
             $hrefArr[$no] = $href;
         }
+
 
         //下载图片
         foreach($hrefArr as $key => $href){
@@ -240,6 +246,8 @@ class PaController extends Controller
             $title = preg_replace('/(E|e)lectric\s?/', '', $title);
             $title = preg_replace('/(T|t)ool(s)?\s?/', '', $title);
             $title = preg_replace('/(D|d)rill(s)?\s?/', '', $title);
+            $title = preg_replace('/(M|m)etal\s?/', '', $title);
+            $title = preg_replace('/(C|c)hain\s?/', '', $title);
             $title = preg_replace('/(P|p)art(s)?\s?/', '', $title);
             $title = preg_replace('/(A|a)libaba\s?/', '', $title);
             $title = preg_replace('/for\s?/', '', $title);
