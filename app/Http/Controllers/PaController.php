@@ -4,10 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use simple_html_dom;
-use Excel;
-use Storage;
 use App\Exports\ProductExport;
-//use QL\QueryList;
 
 class PaController extends Controller
 {
@@ -41,7 +38,7 @@ class PaController extends Controller
             ];
 
         $html = new simple_html_dom();
-        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        @$html->load_file(\Storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $list = $html->find('div.prod-title a');
         //分析html
         //编号 title url 生成excel
@@ -88,7 +85,7 @@ class PaController extends Controller
             //$productHtml = $this->httpCurl($href);
             @$html->load_file($href);
             $folderName = $group.'/img/'.$this->renameFolder($key).'/';
-            Storage::disk('public')->makeDirectory($folderName);
+            \Storage::disk('public')->makeDirectory($folderName);
 
             $imgList = $html->find('div.sr-proMainInfo-slide-picItem');
             //video src
@@ -96,7 +93,7 @@ class PaController extends Controller
             foreach($imgList as $key=>$img){
                 if(isset($img->attr['fsrc'])){
                     $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
-                    Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
+                    \Storage::disk('public')->put($folderName.$filename, file_get_contents('https:'.$img->attr['fsrc']));
                 }
             }
         }
@@ -132,7 +129,7 @@ class PaController extends Controller
                     ];
 
         $html = new simple_html_dom();
-        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        @$html->load_file(\Storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $hrefList = $html->find('div.organic-gallery-offer-section__title a');
         //分析html
         $data = [['分组', '型号', '标题', '产品链接']];
@@ -175,7 +172,7 @@ class PaController extends Controller
             array_splice($data[$key-($item-1)*$limit], 2, 0, [$titleStr]);
 
             $folderName = $group.'/img/'.$this->renameFolder($key).'/';
-            Storage::disk('public')->makeDirectory($folderName);
+            \Storage::disk('public')->makeDirectory($folderName);
             $imgList = $html->find('li.main-image-thumb-item > img');
             //img src
             foreach($imgList as $key=>$img){
@@ -183,7 +180,7 @@ class PaController extends Controller
                     $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
                     $sourceArr  = explode('_', $img->attr['src']);
                     array_pop($sourceArr);
-                    Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
+                    \Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
                 }
             }
         }
@@ -217,7 +214,7 @@ class PaController extends Controller
                     ];
 
         $html = new simple_html_dom();
-        @$html->load_file(storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        @$html->load_file(\Storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
         $hrefList = $html->find('div.title.clamped a');
         //分析html
         $data = [['分组', '型号', '标题', '产品链接']];
@@ -263,7 +260,7 @@ class PaController extends Controller
             array_splice($data[$key-($item-1)*$limit], 2, 0, [$titleStr]);
 
             $folderName = $group.'/img/'.$this->renameFolder($key).'/';
-            Storage::disk('public')->makeDirectory($folderName);
+            \Storage::disk('public')->makeDirectory($folderName);
             $imgList = $html->find('li.main-image-thumb-item > img');
             //img src
             foreach($imgList as $key=>$img){
@@ -271,7 +268,79 @@ class PaController extends Controller
                     $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
                     $sourceArr  = explode('_', $img->attr['src']);
                     array_pop($sourceArr);
-                    Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
+                    \Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('_', $sourceArr)));
+                }
+            }
+        }
+
+        //写入excel
+        $this->export($data, $name, $group, $item);
+    }
+    
+    //1688 国内
+    public function alibabachina(Request $request)
+    {
+        //每页产品数量
+        $limit = 24;
+        set_time_limit(0);
+        $name = '产品目录手册';
+
+        $group = $request->input('group');
+        $item = $request->input('item');
+        if(!$group || !$item){
+            dd('没有参数');
+        }
+
+        $prefix = [
+                    '家用组合工具'=>'家用组合工具',
+                    '电动工具配件'=>'电动工具配件',
+                    '开槽机'=>'开槽机',
+                    '电动螺丝刀'=>'电动螺丝刀',
+                    '电刨'=>'电刨',
+                    '电镐'=>'电镐',
+                    '机用锯条'=>'机用锯条',
+                    '电剪刀'=>'电剪刀',
+                    '修枝剪'=>'修枝剪',
+                    '石材切割机'=>'石材切割机',
+                    '手电钻'=>'手电钻',
+                    '棘轮扳手'=>'棘轮扳手',
+                    '扫地机'=>'扫地机',
+                    '型材切割机'=>'型材切割机',
+                    '油锯'=>'油锯',
+                    '割草机'=>'割草机',
+                    '激光水平仪'=>'激光水平仪',
+                    '园艺工具'=>'园艺工具',
+                ];
+
+        $html = new simple_html_dom();
+        @$html->load_file(\Storage_path().'/app/public/html/'.$group.'/48-'.$item.'.html');
+        $hrefList = $html->find('div.title-new a');
+        //分析html
+        $data = [['分组', '型号', '标题', '产品链接']];
+        $hrefArr = [];
+        foreach($hrefList as $key=>$l){
+            $no = $key + 1 + ($item-1)*$limit;
+            $noStr = 'oem-cm-'.$prefix[$group].$this->renameFolder($no);
+            $title = $l->attr['title'];
+            $href = $l->attr['href'];
+            $data[] = [$group, $noStr, $title, $href];
+            $hrefArr[$no] = $href;
+        }
+        //下载图片
+        foreach($hrefArr as $key => $href){
+            $html->load_file($href);
+            $folderName = $group.'/img/'.$this->renameFolder($key).'/';
+            \Storage::disk('public')->makeDirectory($folderName);
+            $imgList = $html->find('li.tab-trigger');
+            dd($imgList);
+            //img src
+            foreach($imgList as $key=>$img){
+                if(isset($img->attr['src'])){
+                    $filename = ($key+1).'-'.md5(microtime(true).mt_rand(1,9999)).'.jpg';
+                    $sourceArr  = explode('.', $img->attr['src']);
+                    unset($sourceArr[1]);
+                    dd($sourceArr);
+                    //\Storage::disk('public')->put($folderName.$filename, file_get_contents(implode('.', $sourceArr)));
                 }
             }
         }
@@ -309,7 +378,7 @@ class PaController extends Controller
     private function export($data, $name, $group, $item) 
     {
         //Excel::store(new ProductExport($data), $name.'.xlsx', 'public');
-        Excel::store(new ProductExport($data), $group.'/'.$name.'-'.$group.'-'.$item.'.xlsx', 'public');
+        \Excel::store(new ProductExport($data), $group.'/'.$name.'-'.$group.'-'.$item.'.xlsx', 'public');
     }
 
     private function renameFolder($num)
